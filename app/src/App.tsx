@@ -1,24 +1,26 @@
-import React from 'react';
-import logo from './logo.svg';
+import React, { useEffect, useState } from 'react';
 import './App.css';
+import Header from './components/ui/Header';
+import WaldoImage from './components/WaldoImage';
+import waldoData from './assets/waldos.json';
 
 function App() {
+  const waldos = waldoData;
+  const [foundWaldo, setFoundWaldo] = useState(false);
+  const [level, setLevel] = useState(0);
+
+  useEffect(() => {
+    if (foundWaldo) {
+      setLevel(level + 1);
+      setFoundWaldo(false);
+    }
+  }, [foundWaldo, level]);
+
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.tsx</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
+    <div className='App flex flex-col items-center justify-center'>
+      <Header />
+      <p className='font-mono'>Where is waldo?</p>
+      <WaldoImage waldo={waldos[level]} setFoundWaldo={setFoundWaldo} />
     </div>
   );
 }
