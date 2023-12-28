@@ -6,7 +6,7 @@ type box = {
     bottom_right: { x: number, y: number }
 }
 
-export default function ClickArea({ className, waldo_box, setFoundWaldo }: { className: string, waldo_box: box, setFoundWaldo: waldoSetterType }) {
+export default function ClickArea({ className, waldo_box, setGameOver }: { className: string, waldo_box: box, setGameOver: waldoSetterType }) {
     const mousePosition = useMousePosition();
     const [guesses, setGuesses] = useState<{ x: number, y: number }[]>([]);
     const [frameWidth, setFrameWidth] = useState<number>(0);
@@ -24,7 +24,7 @@ export default function ClickArea({ className, waldo_box, setFoundWaldo }: { cla
         console.log("FOUND:", found)
 
         if (found) {
-            setFoundWaldo(true);
+            setGameOver(true);
         } else {
             setGuesses([...guesses, { x: x_ratio, y: y_ratio }]);
         }
