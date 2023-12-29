@@ -14,15 +14,15 @@
         "time": 60
     },
     {
-        "image_name": "waldo1.jpg",
+        "image_name": "waldo2.jpg",
         "waldo_box": {
             "top_left": {
-                "x": 0.6082,
-                "y": 0.3443
+                "x": 0.6933,
+                "y": 0.4181
             },
             "bottom_right": {
-                "x": 0.6324,
-                "y": 0.3963
+                "x": 0.7157,
+                "y": 0.4465
             }
         },
         "time": 120
