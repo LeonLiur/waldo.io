@@ -1,12 +1,12 @@
 import React, { useEffect, useState } from "react";
-import { waldoSetterType } from "./util/util_types";
+import { Found, waldoSetterType } from "./util/util_types";
 
 type box = {
     top_left: { x: number, y: number }
     bottom_right: { x: number, y: number }
 }
 
-export default function ClickArea({ className, waldo_box, setGameOver }: { className: string, waldo_box: box, setGameOver: waldoSetterType }) {
+export default function ClickArea({ className, waldo_box, setGameStatus }: { className: string, waldo_box: box, setGameStatus: waldoSetterType }) {
     const mousePosition = useMousePosition();
     const [guesses, setGuesses] = useState<{ x: number, y: number }[]>([]);
     const [frameWidth, setFrameWidth] = useState<number>(0);
@@ -24,7 +24,7 @@ export default function ClickArea({ className, waldo_box, setGameOver }: { class
         console.log("FOUND:", found)
 
         if (found) {
-            setGameOver(true);
+            setGameStatus(Found);
         } else {
             setGuesses([...guesses, { x: x_ratio, y: y_ratio }]);
         }
