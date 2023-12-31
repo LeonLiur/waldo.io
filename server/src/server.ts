@@ -1,18 +1,23 @@
-import { Request, Response } from 'express'
+import {Request, Response} from 'express'
+import { Socket } from 'socket.io';
 
-const express = require('express')
-const cors = require('cors')
-require('dotenv').config()
+const express = require('express');
+const { createServer } = require('node:http');
+const { join } = require('node:path');
+const { Server } = require('socket.io');
 
-const app = express()
-app.use(cors())
-app.use(express.json())
-const port = process.env.PORT || 8000;
+const app = express();
+const server = createServer(app);
+const io = new Server(server);
 
 app.get('/', (req: Request, res: Response) => {
-    res.send('welcome to backend')
-})
+  res.sendFile(join(__dirname, 'index.html'));
+});
 
-app.listen(8000, () => {
-    console.log(`App listening at http://localhost:${port}`);
-})
+io.on('connection', (socket: Socket) => {
+  console.log('a user connected');
+});
+
+server.listen(3000, () => {
+  console.log('server running at http://localhost:3000');
+});
