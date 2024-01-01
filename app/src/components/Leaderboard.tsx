@@ -6,9 +6,9 @@ function Leaderboard({ leaderboard }: { leaderboard: leaderboardEntry[] }) {
             <table className='table-fixed w-full'>
                 <thead>
                     <tr>
-                        <th className='px-2 w-1/6 border'></th>
-                        <th className='px-4 w-5/12 border'>Name</th>
-                        <th className='px-4 w-5/12 border'>Score</th>
+                        <th className='px-2 w-1/6 border text-center'></th>
+                        <th className='px-4 w-5/12 border text-center'>Name</th>
+                        <th className='px-4 w-5/12 border text-center'>Score</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -29,7 +29,7 @@ function Leaderboard({ leaderboard }: { leaderboard: leaderboardEntry[] }) {
     )
 }
 
-type leaderboardEntry = {
+export type leaderboardEntry = {
     name: string, score: number
 }
 

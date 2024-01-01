@@ -6,31 +6,49 @@ const express = require('express');
 const { createServer } = require('node:http');
 const { join } = require('node:path');
 const { Server } = require('socket.io');
+const cors = require('cors')
 
-const app = express();
+const corsOptions = {
+  origin: '*',
+}
+
+const app = express(corsOptions);
 const server = createServer(app);
-const io = new Server(server);
+const io = new Server(server, {
+  cors: {
+    origin: "*",
+    methods: ['GET', 'POST']
+  }
+});
 
 app.get('/', (req: Request, res: Response) => {
   res.status(200).send({"message" : "hello world", "roulette" : Math.floor(Math.random() * 6)})
 });
 
 app.get('/leaderboard', (req: Request, res: Response) => {
-  
+
 })
 
 io.on('connection', (socket: Socket) => {
-  console.log(`connected: ${socket.id}`);
-  socket.on('gameStatuschange', (status: gameStatus) => {
+  console.log(`[*] connected: ${socket.id}`);
+  socket.on('gameStatusChange', ({status, player} : {status: gameStatus, player: string}) => {
+    console.log("[+] received: /gameStatusChange/")
     switch (status) {
       case Playing:
         break;
       case Found:
+        console.log("[+] Sent: scoreBoardChange")
+        socket.emit('scoreBoardChange', {player: player, score: 100})
         break;
       case Not_Found:
+        console.log("[+] Sent: scoreBoardChange")
+        socket.emit('scoreBoardChange', {player: player, score: -100})
         break;
     }
   })
+  socket.on('disconnect', () => {
+    console.log(`[*] disconnected: ${socket.id}`);
+  });
 });
 
 server.listen(8000, () => {

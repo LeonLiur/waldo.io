@@ -7,7 +7,7 @@ function App() {
   return (
     <div className='App flex flex-col items-center justify-center'>
       <Header />
-      <Game waldos={levels} />
+      <Game waldos={levels} player="leo"/>
     </div>
   );
 }

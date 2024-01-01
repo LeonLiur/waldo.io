@@ -20,13 +20,11 @@ export enum gameStatus {
 }
 
 export interface ServerToClientEvents {
-    noArg: () => void;
-    basicEmit: (a: number, b: string, c: Buffer) => void;
-    withAck: (d: string, callback: (e: number) => void) => void;
+    scoreBoardChange: ({player, score} : {player: string, score: number}) => void;
 }
 
 export interface ClientToServerEvents {
-    gameStatusChange: (status: gameStatus) => void;
+    gameStatusChange: ({status, player} : {status: gameStatus, player: string}) => void;
 }
 
 export interface InterServerEvents {
