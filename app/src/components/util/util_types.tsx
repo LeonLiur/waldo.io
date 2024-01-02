@@ -13,6 +13,10 @@ export type waldoType = {
     time: number,
 }
 
+export type guessType = {x: number, y:number}[];
+
+export type setGuessType = Dispatch<SetStateAction<guessType>>;
+
 export enum gameStatus {
     Playing = 0,
     Found = 1,

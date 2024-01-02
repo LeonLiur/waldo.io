@@ -1,16 +1,16 @@
 import React, { useEffect, useState } from "react";
-import { Found, waldoSetterType } from "./util/util_types";
+import { Found, Playing, gameStatus, guessType, setGuessType, waldoSetterType } from "./util/util_types";
 
 type box = {
     top_left: { x: number, y: number }
     bottom_right: { x: number, y: number }
 }
 
-export default function ClickArea({ className, waldo_box, setGameStatus }: { className: string, waldo_box: box, setGameStatus: waldoSetterType }) {
+export default function ClickArea({ className, waldo_box, gameStatus, setGameStatus, guesses, setGuesses }: propType) {
     const mousePosition = useMousePosition();
-    const [guesses, setGuesses] = useState<{ x: number, y: number }[]>([]);
     const [frameWidth, setFrameWidth] = useState<number>(0);
     const [frameHeight, setFrameHeight] = useState<number>(0);
+    const [foundWaldo, setFoundWaldo] = useState<boolean>(false);
 
     const handleClick = (e: any) => {
         const rect: DOMRect = e.target.getBoundingClientRect();
@@ -24,6 +24,7 @@ export default function ClickArea({ className, waldo_box, setGameStatus }: { cla
         console.log("FOUND:", found)
 
         if (found) {
+            setFoundWaldo(true);
             setGameStatus(Found);
         } else {
             setGuesses([...guesses, { x: x_ratio, y: y_ratio }]);
@@ -37,6 +38,14 @@ export default function ClickArea({ className, waldo_box, setGameStatus }: { cla
                     <img style={{ left: guess.x * frameWidth - 0.5 * frameWidth / 40, top: guess.y * frameHeight - 0.5 * frameHeight / 40, position: 'absolute' }} className="w-1/40 h-1/40" key={i} src="cross.svg" alt="cross"></img>
                 )
             })}
+            {gameStatus === Found &&
+                <div className='opacity-50 bg-green-400' style={{
+                    left: waldo_box.top_left.x * frameWidth - (waldo_box.bottom_right.x - waldo_box.top_left.x) * frameWidth / 4,
+                    top: waldo_box.top_left.y * frameHeight - (waldo_box.bottom_right.y - waldo_box.top_left.y) * frameHeight / 4,
+                    width: (waldo_box.bottom_right.x - waldo_box.top_left.x) * frameWidth * 1.5,
+                    height: (waldo_box.bottom_right.y - waldo_box.top_left.y) * frameHeight * 1.5,
+                    position: 'absolute'
+                }}></div>}
         </div >
 
     )
@@ -60,3 +69,4 @@ const useMousePosition = () => {
     return mousePosition;
 };
 
+type propType = { className: string, waldo_box: box, gameStatus: gameStatus, setGameStatus: waldoSetterType, guesses: guessType, setGuesses: setGuessType }
