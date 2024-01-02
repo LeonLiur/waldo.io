@@ -1,14 +1,14 @@
 import './App.css';
 import Header from './components/ui/Header';
-import levels from './assets/levels.json';
 import Game from './components/Game';
+import { BrowserRouter, Route, Routes } from 'react-router-dom';
+import Home from './components/Home';
 
 function App() {
   return (
-    <div className='App flex flex-col items-center justify-center'>
-      <Header />
-      <Game waldos={levels} player="leo"/>
-    </div>
+    <Routes>
+      <Route path="/" element={<Home />} />
+    </Routes>
   );
 }
 
