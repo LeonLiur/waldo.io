@@ -17,6 +17,16 @@ export type guessType = {x: number, y:number}[];
 
 export type setGuessType = Dispatch<SetStateAction<guessType>>;
 
+export type playerType = {
+    name: string,
+}
+
+export type roomType = {
+    players: playerType[],
+    host: playerType,
+    key: string,
+}
+
 export enum gameStatus {
     Playing = 0,
     Found = 1,
