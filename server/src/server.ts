@@ -1,4 +1,4 @@
-import {Request, Response} from 'express'
+import { Request, Response } from 'express'
 import { Socket } from 'socket.io';
 import { Found, Not_Found, Playing, gameStatus } from './util';
 
@@ -22,7 +22,7 @@ const io = new Server(server, {
 });
 
 app.get('/', (req: Request, res: Response) => {
-  res.status(200).send({"message" : "hello world", "roulette" : Math.floor(Math.random() * 6)})
+  res.status(200).send({ "message": "hello world", "roulette": Math.floor(Math.random() * 6) })
 });
 
 app.get('/leaderboard', (req: Request, res: Response) => {
@@ -31,18 +31,22 @@ app.get('/leaderboard', (req: Request, res: Response) => {
 
 io.on('connection', (socket: Socket) => {
   console.log(`[*] connected: ${socket.id}`);
-  socket.on('gameStatusChange', ({status, player} : {status: gameStatus, player: string}) => {
+  socket.on('joinRoom', (room: string) => {
+    console.log("[+] received: /joinRoom/")
+    socket.join(room)
+  })
+  socket.on('gameStatusChange', ({ status, player }: { status: gameStatus, player: string }) => {
     console.log("[+] received: /gameStatusChange/")
     switch (status) {
       case Playing:
         break;
       case Found:
         console.log("[+] Sent: scoreBoardChange")
-        socket.emit('scoreBoardChange', {player: player, score: 100})
+        socket.emit('scoreBoardChange', { player: player, score: 100 })
         break;
       case Not_Found:
         console.log("[+] Sent: scoreBoardChange")
-        socket.emit('scoreBoardChange', {player: player, score: -100})
+        socket.emit('scoreBoardChange', { player: player, score: -100 })
         break;
     }
   })

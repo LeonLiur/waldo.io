@@ -1,21 +1,24 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react'
-import { ClientToServerEvents, Found, Not_Found, Playing, ServerToClientEvents, gameStatus, waldoType } from './util/util_types';
-import { io, Socket } from "socket.io-client";
+import { ClientToServerEvents, Found, Not_Found, Playing, ServerToClientEvents, gameStatus, roomType, waldoType } from './util/util_types';
 import { socket } from '.././socket';
 import WaldoImage from './WaldoImage';
 import Timer from './Timer';
 import Leaderboard, { leaderboardEntry } from './Leaderboard';
+import { db } from './util/firebase';
+import { child, ref, get } from 'firebase/database';
 
-
-function Game({ waldos, player }: { waldos: waldoType[], player: string }) {
+function Game({ waldos, player, roomNumber }: { waldos: waldoType[], player: string, roomNumber: string }) {
     const [gameStatus, setGameStatus] = useState<gameStatus>(Playing);
     const [level, setLevel] = useState(0);
     const [leaderboard, setLeaderboard] = useState<leaderboardEntry[]>([]);
     const [guesses, setGuesses] = useState<{ x: number, y: number }[]>([]);
+    const [started, setStarted] = useState(false);
+    const [room, setRoom] = useState<roomType>();
 
     useEffect(() => {
         const onConnect = () => {
             console.log(`connected: ${socket.id}`)
+            socket.emit('joinRoom', roomNumber);
         }
 
         const onDisconnect = () => {
@@ -39,6 +42,12 @@ function Game({ waldos, player }: { waldos: waldoType[], player: string }) {
         socket.on('connect', onConnect);
         socket.on('disconnect', onDisconnect);
         socket.on('scoreBoardChange', onScoreBoardChange);
+
+        get(ref(db, `rooms/${roomNumber}`)).then((snapshot) => {
+            setRoom(snapshot.val());
+        }).catch((error) => {
+            console.error(error);
+        })
 
         return () => {
             socket.disconnect();
@@ -66,18 +75,28 @@ function Game({ waldos, player }: { waldos: waldoType[], player: string }) {
     }, [gameStatus, player])
 
     return (
-        <div>
-            <p className='font-mono'>Where is waldo?</p>
-            <div className='flex'>
-                <WaldoImage waldo={waldos[level]} gameStatus={gameStatus} setGameStatus={setGameStatus} guesses={guesses} setGuesses={setGuesses}/>
-                <div className='flex-col w-2/12'>
-                    <Timer gameStatus={gameStatus} setGameStatus={setGameStatus} levelTime={waldos[level].time} />
-                    {gameStatus === Not_Found && <div className='bg-red-500'>You did NOT find Waldo</div>}
-                    {gameStatus === Found && <div className='bg-green-500'>You found Waldo!</div>}
-                    <Leaderboard leaderboard={leaderboard} />
+        started ?
+            <div>
+                <p className='font-mono'>Where is waldo?</p>
+                <div className='flex'>
+                    <WaldoImage waldo={waldos[level]} gameStatus={gameStatus} setGameStatus={setGameStatus} guesses={guesses} setGuesses={setGuesses} />
+                    <div className='flex-col w-2/12'>
+                        <Timer gameStatus={gameStatus} setGameStatus={setGameStatus} levelTime={waldos[level].time} />
+                        {gameStatus === Not_Found && <div className='bg-red-500'>You did NOT find Waldo</div>}
+                        {gameStatus === Found && <div className='bg-green-500'>You found Waldo!</div>}
+                        <Leaderboard leaderboard={leaderboard} />
+                    </div>
                 </div>
             </div>
-        </div>
+            :
+            <div className='flex flex-col justify-center items-center border-3 border-green-300'>
+                <h1 className='text-lg'>Room {roomNumber}</h1>
+                room ?
+                {room?.players.map((player: { name: string }, index: number) => {
+                    return <p key={index}>{player.name}</p>
+                })}
+                : <p>Room not found</p>
+            </div>
     );
 }
 
