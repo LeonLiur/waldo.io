@@ -1,8 +1,10 @@
 import { useEffect, useState } from 'react'
 import Header from './ui/Header'
-import { db } from './util/firebase';
+import { auth, db } from './util/firebase';
 import { useNavigate } from 'react-router-dom';
 import { child, onValue, push, ref, set } from 'firebase/database';
+import { signInAnonymously } from 'firebase/auth';
+import { FirebaseError } from 'firebase/app';
 
 
 function Home() {
@@ -12,13 +14,26 @@ function Home() {
 
     const roomsRef = ref(db, 'rooms/');
 
+    useEffect(() => {
+        signInAnonymously(auth)
+            .then(() => {
+                console.log(`User has signed in: ${auth.currentUser?.uid}`)
+            })
+            .catch((error: FirebaseError) => {
+                const errorCode = error.code;
+                const errorMessage = error.message;
+                console.log(`Sign in failed: ${errorCode} ${errorMessage}`)
+            });
+    }, [])
+
+
     const createRoom = () => {
         const key = [...Array(4)].map(() => Math.random() > 0.5 ? (Math.random() * 36 | 0).toString(36) : (Math.random() * 36 | 0).toString(36).toUpperCase()).join('');
         set(child(roomsRef, key), {
             roomKey: key,
             players: [],
-            host: {},
-            canStart: false,
+            host: auth.currentUser?.uid,
+            starting: false,
             started: false
         })
         navigate(`/${key}`)

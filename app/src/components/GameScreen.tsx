@@ -3,7 +3,7 @@ import Header from './ui/Header'
 import Game from './Game'
 import levels from '../assets/levels.json';
 import { useParams, useSearchParams } from 'react-router-dom';
-import { db } from './util/firebase';
+import { auth, db } from './util/firebase';
 import { onValue, ref, push, set, onChildAdded, get, child } from 'firebase/database';
 import { playerType } from './util/util_types';
 import { useInterval } from './ui/useInterval';
@@ -17,7 +17,9 @@ function GameScreen() {
     const [playerLoaded, setPlayerLoaded] = useState<boolean>(false);
     const [players, setPlayers] = useState<playerType[]>([]);
     const [ready, setReady] = useState<boolean>(false);
-    const [canStart, setCanStart] = useState<boolean>(false);
+    const [starting, setStarting] = useState<boolean>(false);
+    const [allReady, setAllReady] = useState<boolean>(false);
+    const [hostID, setHostID] = useState<string>();
     const [timeTilStart, setTimeTilStart] = useState<number>(5);
     const [gameStarted, setGameStarted] = useState<boolean>(false);
 
@@ -25,44 +27,54 @@ function GameScreen() {
     const playerRef = ref(db, `rooms/${roomNumber}/players`)
 
     useEffect(() => {
-        const canStartListener = onValue(child(roomRef, '/canStart'), (snapshot) => {
+        const hostListener = onValue(child(roomRef, '/host'), (snapshot) => {
             if (snapshot.exists()) {
                 setValidRoom(true);
-                setCanStart(snapshot.val())
+                setHostID(snapshot.val())
             } else {
                 setValidRoom(false);
             }
             setDBLoaded(true)
         })
+        const startingListener = onValue(child(roomRef, '/starting'), (snapshot) => {
+            if (snapshot.exists()) {
+                setStarting(snapshot.val())
+            }
+        })
 
         const onValuePlayerListener = onValue(playerRef, (snapshot) => {
             if (snapshot.exists()) {
                 setPlayers(snapshot.val())
+                setAllReady(snapshot.val().every((player: playerType) => player.ready))
             }
         }
         )
+        console.log(auth.currentUser?.uid)
 
         return () => {
-            canStartListener();
+            hostListener();
+            startingListener();
             onValuePlayerListener();
         }
     }, [])
 
     useEffect(() => {
-        if (!canStart) {
+        if (!(starting && allReady)) {
             setTimeTilStart(5)
         }
-    }, [canStart])
+    }, [starting, allReady])
 
     useInterval(() => {
         if (timeTilStart > 0) {
             setTimeTilStart((prev) => prev - 1)
         } else {
             setGameStarted(true)
-            setCanStart(false)
+            setStarting(false)
 
+            set(child(roomRef, '/started'), true)
+            set(child(roomRef, '/starting'), false)
         }
-    }, 1000, canStart)
+    }, 1000, starting && allReady)
 
     return (
         <>
@@ -83,7 +95,7 @@ function GameScreen() {
                                         <h1>Your name</h1>
                                         <div className='flex justify-center'>
                                             <input onChange={(e) => setPlayerName(e.target.value)} className='border-2 rounded-md w-6/12 text-center' required />
-                                            <button className='bg-green-300 rounded-md px-2' onClick={() => { set(playerRef, [...players, { name: playerName, ready: false }]); setPlayerLoaded(true) }}> Join </button>
+                                            <button className='bg-green-300 rounded-md px-2' onClick={() => { set(playerRef, [...players, { name: playerName, ready: false, uid: auth.currentUser?.uid }]); setPlayerLoaded(true) }}> Join </button>
                                         </div>
                                     </div>
                                 }
@@ -95,6 +107,7 @@ function GameScreen() {
                                                 <tr key={index}>
                                                     <td className='px-5'>{player.name}</td>
                                                     <td className='px-5 italic font-semibold uppercase'>{player.ready ? "READY" : "--"}</td>
+                                                    {player.uid === hostID && <td>(Host)</td>}
                                                 </tr>)
                                         }
                                         )}
@@ -118,7 +131,8 @@ function GameScreen() {
                                         }))
                                     }}>{ready ? "Cancel" : "Ready Up!"}</button>
                                 }
-                                {canStart && <p>Starting in ...{timeTilStart}</p>}
+                                {(auth.currentUser?.uid === hostID) && allReady && !starting && <button className={`italic font-semibold uppercase disabled:bg-slate-300 px-2 rounded-md ${!allReady && 'disabled'} bg-yellow-300 mt-3`} onClick={() => { setStarting(!starting); set(child(roomRef, '/starting'), !starting) }}>START GAME</button>}
+                                {starting && allReady && <p>Starting in ...{timeTilStart}</p>}
                             </>
                         }
                     </>

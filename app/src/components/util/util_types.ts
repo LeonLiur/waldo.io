@@ -19,6 +19,7 @@ export type setGuessType = Dispatch<SetStateAction<guessType>>;
 
 export type playerType = {
     name: string,
+    uid: string,
     ready: boolean,
 }
 
