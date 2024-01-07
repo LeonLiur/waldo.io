@@ -41,6 +41,11 @@ function GameScreen() {
                 setStarting(snapshot.val())
             }
         })
+        const startedListener = onValue(child(roomRef, '/started'), (snapshot) => {
+            if (snapshot.exists()) {
+                setGameStarted(snapshot.val())
+            }
+        })
 
         const onValuePlayerListener = onValue(playerRef, (snapshot) => {
             if (snapshot.exists()) {
@@ -54,6 +59,7 @@ function GameScreen() {
         return () => {
             hostListener();
             startingListener();
+            startedListener();
             onValuePlayerListener();
         }
     }, [])
@@ -63,6 +69,8 @@ function GameScreen() {
             setTimeTilStart(5)
         }
     }, [starting, allReady])
+
+    useEffect(() => { if (!allReady) setStarting(false) }, [allReady])
 
     useInterval(() => {
         if (timeTilStart > 0) {

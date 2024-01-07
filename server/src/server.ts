@@ -32,7 +32,7 @@ app.get('/leaderboard', (req: Request, res: Response) => {
 io.on('connection', (socket: Socket) => {
   console.log(`[*] connected: ${socket.id}`);
   socket.on('joinRoom', (room: string) => {
-    console.log("[+] received: /joinRoom/")
+    console.log(`[+] received: /joinRoom/ on room=${room}`)
     socket.join(room)
   })
   socket.on('gameStatusChange', ({ status, player, roomNumber }: { status: gameStatus, player: string, roomNumber: string }) => {
