@@ -74,7 +74,7 @@ function GameScreen() {
                     </>
                     :
                     <>
-                        {!validRoom && <h1>Invalid Room!</h1>}
+                        {!validRoom && <h1>404: Invalid Room!</h1>}
                         {DBLoaded &&
                             <>
                                 <h1 className='text-lg font-bold border-t-2 left-3 right-3'>Room {roomNumber}</h1>

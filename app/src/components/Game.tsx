@@ -17,6 +17,7 @@ function Game({ waldos, player, roomNumber }: { waldos: waldoType[], player: str
     useEffect(() => {
         const onConnect = () => {
             console.log(`connected: ${socket.id}`)
+            console.log(`[+] Sent: /joinRoom/ ${roomNumber}`)
             socket.emit('joinRoom', roomNumber);
         }
 
@@ -69,7 +70,7 @@ function Game({ waldos, player, roomNumber }: { waldos: waldoType[], player: str
     useEffect(() => {
         if (gameStatus === Found || gameStatus === Not_Found) {
             console.log("[+] Sent: /gameStatusChange/")
-            socket.emit('gameStatusChange', { status: gameStatus, player: player })
+            socket.emit('gameStatusChange', { status: gameStatus, player: player, roomNumber: roomNumber })
         }
     }, [gameStatus, player])
 

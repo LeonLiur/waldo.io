@@ -35,18 +35,18 @@ io.on('connection', (socket: Socket) => {
     console.log("[+] received: /joinRoom/")
     socket.join(room)
   })
-  socket.on('gameStatusChange', ({ status, player }: { status: gameStatus, player: string }) => {
+  socket.on('gameStatusChange', ({ status, player, roomNumber }: { status: gameStatus, player: string, roomNumber: string }) => {
     console.log("[+] received: /gameStatusChange/")
     switch (status) {
       case Playing:
         break;
       case Found:
         console.log("[+] Sent: scoreBoardChange")
-        socket.emit('scoreBoardChange', { player: player, score: 100 })
+        socket.to(roomNumber).emit('scoreBoardChange', { player: player, score: 100 })
         break;
       case Not_Found:
         console.log("[+] Sent: scoreBoardChange")
-        socket.emit('scoreBoardChange', { player: player, score: -100 })
+        socket.to(roomNumber).emit('scoreBoardChange', { player: player, score: -100 })
         break;
     }
   })
