@@ -12,7 +12,6 @@ function Game({ waldos, player, roomNumber }: { waldos: waldoType[], player: str
     const [level, setLevel] = useState(0);
     const [leaderboard, setLeaderboard] = useState<leaderboardEntry[]>([]);
     const [guesses, setGuesses] = useState<{ x: number, y: number }[]>([]);
-    const [started, setStarted] = useState(false);
     const [room, setRoom] = useState<roomType>();
 
     useEffect(() => {
@@ -75,28 +74,18 @@ function Game({ waldos, player, roomNumber }: { waldos: waldoType[], player: str
     }, [gameStatus, player])
 
     return (
-        started ?
-            <div>
-                <p className='font-mono'>Where is waldo?</p>
-                <div className='flex'>
-                    <WaldoImage waldo={waldos[level]} gameStatus={gameStatus} setGameStatus={setGameStatus} guesses={guesses} setGuesses={setGuesses} />
-                    <div className='flex-col w-2/12'>
-                        <Timer gameStatus={gameStatus} setGameStatus={setGameStatus} levelTime={waldos[level].time} />
-                        {gameStatus === Not_Found && <div className='bg-red-500'>You did NOT find Waldo</div>}
-                        {gameStatus === Found && <div className='bg-green-500'>You found Waldo!</div>}
-                        <Leaderboard leaderboard={leaderboard} />
-                    </div>
+        <div>
+            <p className='font-mono'>Where is waldo?</p>
+            <div className='flex'>
+                <WaldoImage waldo={waldos[level]} gameStatus={gameStatus} setGameStatus={setGameStatus} guesses={guesses} setGuesses={setGuesses} />
+                <div className='flex-col w-2/12'>
+                    <Timer gameStatus={gameStatus} setGameStatus={setGameStatus} levelTime={waldos[level].time} />
+                    {gameStatus === Not_Found && <div className='bg-red-500'>You did NOT find Waldo</div>}
+                    {gameStatus === Found && <div className='bg-green-500'>You found Waldo!</div>}
+                    <Leaderboard leaderboard={leaderboard} />
                 </div>
             </div>
-            :
-            <div className='flex flex-col justify-center items-center border-3 border-green-300'>
-                <h1 className='text-lg'>Room {roomNumber}</h1>
-                room ?
-                {room?.players.map((player: { name: string }, index: number) => {
-                    return <p key={index}>{player.name}</p>
-                })}
-                : <p>Room not found</p>
-            </div>
+        </div>
     );
 }
 

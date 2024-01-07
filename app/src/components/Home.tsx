@@ -37,7 +37,7 @@ function Home() {
             })
             setRoomKey(key);
             setValidRoom(true);
-            setRoom({ players: [{ name: playerName }], host: { name: playerName }, key: key })
+            // setRoom({ players: [{ name: playerName }], host: { name: playerName }, key: key })
         }
     }
 
