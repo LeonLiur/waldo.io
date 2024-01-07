@@ -70,7 +70,12 @@ function GameScreen() {
         }
     }, [starting, allReady])
 
-    useEffect(() => { if (!allReady) setStarting(false) }, [allReady])
+    useEffect(() => {
+        if (!allReady) {
+            setStarting(false);
+            set(child(roomRef, '/starting'), false)
+        }
+    }, [allReady])
 
     useInterval(() => {
         if (timeTilStart > 0) {
@@ -139,8 +144,8 @@ function GameScreen() {
                                         }))
                                     }}>{ready ? "Cancel" : "Ready Up!"}</button>
                                 }
-                                {(auth.currentUser?.uid === hostID) && allReady && !starting && <button className={`italic font-semibold uppercase disabled:bg-slate-300 px-2 rounded-md ${!allReady && 'disabled'} bg-yellow-300 mt-3`} onClick={() => { setStarting(!starting); set(child(roomRef, '/starting'), !starting) }}>START GAME</button>}
-                                {starting && allReady && <p>Starting in ...{timeTilStart}</p>}
+                                {(auth.currentUser?.uid === hostID) && allReady && !starting && <button className={`italic font-semibold uppercase disabled:bg-slate-300 px-2 rounded-md ${!allReady && 'disabled'} bg-yellow-300 mt-3`} onClick={() => { setStarting(true); set(child(roomRef, '/starting'), true) }}>START GAME</button>}
+                                {starting && <p>Starting in ...{timeTilStart}</p>}
                             </>
                         }
                     </>
