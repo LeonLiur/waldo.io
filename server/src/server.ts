@@ -50,6 +50,10 @@ io.on('connection', (socket: Socket) => {
         break;
     }
   })
+  socket.on('mousePos', (roomNumber: string, mousePos: { x: number, y: number }) => {
+    console.log(`[+] received: /mousePos/ room=${roomNumber} mousePos=${mousePos.x}, ${mousePos.y}`)
+    socket.to(roomNumber).emit('mousePos', mousePos)
+  })
   socket.on('disconnect', () => {
     console.log(`[*] disconnected: ${socket.id}`);
   });

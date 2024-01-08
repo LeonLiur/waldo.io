@@ -1,12 +1,12 @@
-import React, { useEffect, useState } from 'react'
-import Header from './ui/Header'
-import Game from './Game'
+import { child, onValue, ref, set } from 'firebase/database';
+import { useEffect, useMemo, useState } from 'react';
+import { useParams } from 'react-router-dom';
 import levels from '../assets/levels.json';
-import { useParams, useSearchParams } from 'react-router-dom';
-import { auth, db } from './util/firebase';
-import { onValue, ref, push, set, onChildAdded, get, child } from 'firebase/database';
-import { playerType } from './util/util_types';
+import Game from './Game';
+import Header from './ui/Header';
 import { useInterval } from './ui/useInterval';
+import { auth, db } from './util/firebase';
+import { playerType } from './util/util_types';
 
 function GameScreen() {
     const { roomNumber } = useParams();
@@ -23,8 +23,8 @@ function GameScreen() {
     const [timeTilStart, setTimeTilStart] = useState<number>(5);
     const [gameStarted, setGameStarted] = useState<boolean>(false);
 
-    const roomRef = ref(db, `rooms/${roomNumber}`);
-    const playerRef = ref(db, `rooms/${roomNumber}/players`)
+    const roomRef = useMemo(() => ref(db, `rooms/${roomNumber}`), [roomNumber]);
+    const playerRef = useMemo(() => child(roomRef, '/players'), [roomRef])
 
     useEffect(() => {
         const hostListener = onValue(child(roomRef, '/host'), (snapshot) => {
@@ -54,7 +54,6 @@ function GameScreen() {
             }
         }
         )
-        console.log(auth.currentUser?.uid)
 
         return () => {
             hostListener();
@@ -62,7 +61,7 @@ function GameScreen() {
             startedListener();
             onValuePlayerListener();
         }
-    }, [])
+    }, [roomRef, playerRef])
 
     useEffect(() => {
         if (!(starting && allReady)) {
@@ -75,7 +74,7 @@ function GameScreen() {
             setStarting(false);
             set(child(roomRef, '/starting'), false)
         }
-    }, [allReady])
+    }, [allReady, roomRef])
 
     useInterval(() => {
         if (timeTilStart > 0) {
@@ -93,62 +92,67 @@ function GameScreen() {
         <>
             <Header />
             <div className='flex flex-col justify-center items-center'>
-                {gameStarted ?
+                {validRoom ?
                     <>
-                        <Game waldos={levels} player={playerName || ""} roomNumber={roomNumber || ""} />
-                    </>
-                    :
-                    <>
-                        {!validRoom && <h1>404: Invalid Room!</h1>}
-                        {DBLoaded &&
+                        {gameStarted ?
                             <>
-                                <h1 className='text-lg font-bold border-t-2 left-3 right-3'>Room {roomNumber}</h1>
-                                {!playerLoaded &&
-                                    <div className='flex flex-col justify-center items-center'>
-                                        <h1>Your name</h1>
-                                        <div className='flex justify-center'>
-                                            <input onChange={(e) => setPlayerName(e.target.value)} className='border-2 rounded-md w-6/12 text-center' required />
-                                            <button className='bg-green-300 rounded-md px-2' onClick={() => { set(playerRef, [...players, { name: playerName, ready: false, uid: auth.currentUser?.uid }]); setPlayerLoaded(true) }}> Join </button>
-                                        </div>
-                                    </div>
-                                }
-                                <p>Players in this room:</p>
-                                <table>
-                                    <tbody>
-                                        {players.map((player: playerType, index: number) => {
-                                            return (
-                                                <tr key={index}>
-                                                    <td className='px-5'>{player.name}</td>
-                                                    <td className='px-5 italic font-semibold uppercase'>{player.ready ? "READY" : "--"}</td>
-                                                    {player.uid === hostID && <td>(Host)</td>}
-                                                </tr>)
+                                <Game waldos={levels} player={playerName || ""} roomNumber={roomNumber || ""} />
+                            </>
+                            :
+                            <>
+                                {DBLoaded &&
+                                    <>
+                                        <h1 className='text-lg font-bold border-t-2 left-3 right-3'>Room {roomNumber}</h1>
+                                        {!playerLoaded &&
+                                            <div className='flex flex-col justify-center items-center'>
+                                                <h1>Your name</h1>
+                                                <div className='flex justify-center'>
+                                                    <input onChange={(e) => setPlayerName(e.target.value)} className='border-2 rounded-md w-6/12 text-center' required />
+                                                    <button className='bg-green-300 rounded-md px-2' onClick={() => { set(playerRef, [...players, { name: playerName, ready: false, uid: auth.currentUser?.uid }]); setPlayerLoaded(true) }}> Join </button>
+                                                </div>
+                                            </div>
                                         }
-                                        )}
-                                        {!playerLoaded && playerName &&
-                                            <tr>
-                                                <td className='px-5'>{playerName}</td>
-                                                <td className='px-5 italic font-semibold uppercase'>--</td>
-                                            </tr>
+                                        <p>Players in this room:</p>
+                                        <table>
+                                            <tbody>
+                                                {players.map((player: playerType, index: number) => {
+                                                    return (
+                                                        <tr key={index}>
+                                                            <td className='px-5'>{player.name}</td>
+                                                            <td className='px-5 italic font-semibold uppercase'>{player.ready ? "READY" : "--"}</td>
+                                                            {player.uid === hostID && <td>(Host)</td>}
+                                                        </tr>)
+                                                }
+                                                )}
+                                                {!playerLoaded && playerName &&
+                                                    <tr>
+                                                        <td className='px-5'>{playerName}</td>
+                                                        <td className='px-5 italic font-semibold uppercase'>--</td>
+                                                    </tr>
+                                                }
+                                            </tbody>
+                                        </table>
+                                        {playerLoaded &&
+                                            <button className={`px-2 rounded-md mt-3 ${ready ? "bg-red-300" : "bg-green-300"}`} onClick={() => {
+                                                setReady((prev) => !prev)
+                                                set(playerRef, players.map((player: playerType) => {
+                                                    if (player.name === playerName) {
+                                                        return { name: playerName, ready: !player.ready }
+                                                    } else {
+                                                        return player
+                                                    }
+                                                }))
+                                            }}>{ready ? "Cancel" : "Ready Up!"}</button>
                                         }
-                                    </tbody>
-                                </table>
-                                {playerLoaded &&
-                                    <button className={`px-2 rounded-md mt-3 ${ready ? "bg-red-300" : "bg-green-300"}`} onClick={() => {
-                                        setReady((prev) => !prev)
-                                        set(playerRef, players.map((player: playerType) => {
-                                            if (player.name === playerName) {
-                                                return { name: playerName, ready: !player.ready }
-                                            } else {
-                                                return player
-                                            }
-                                        }))
-                                    }}>{ready ? "Cancel" : "Ready Up!"}</button>
+                                        {(auth.currentUser?.uid === hostID) && allReady && !starting && <button className={`italic font-semibold uppercase disabled:bg-slate-300 px-2 rounded-md ${!allReady && 'disabled'} bg-yellow-300 mt-3`} onClick={() => { setStarting(true); set(child(roomRef, '/starting'), true) }}>START GAME</button>}
+                                        {starting && <p>Starting in ...{timeTilStart}</p>}
+                                    </>
                                 }
-                                {(auth.currentUser?.uid === hostID) && allReady && !starting && <button className={`italic font-semibold uppercase disabled:bg-slate-300 px-2 rounded-md ${!allReady && 'disabled'} bg-yellow-300 mt-3`} onClick={() => { setStarting(true); set(child(roomRef, '/starting'), true) }}>START GAME</button>}
-                                {starting && <p>Starting in ...{timeTilStart}</p>}
                             </>
                         }
                     </>
+                    :
+                    <h1>404: Invalid Room!</h1>
                 }
             </div >
         </>

@@ -1,18 +1,16 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react'
-import { ClientToServerEvents, Found, Not_Found, Playing, ServerToClientEvents, gameStatus, roomType, waldoType } from './util/util_types';
+import { useEffect, useState } from 'react';
 import { socket } from '.././socket';
-import WaldoImage from './WaldoImage';
-import Timer from './Timer';
 import Leaderboard, { leaderboardEntry } from './Leaderboard';
-import { db } from './util/firebase';
-import { child, ref, get } from 'firebase/database';
+import Timer from './Timer';
+import WaldoImage from './WaldoImage';
+import { Found, Not_Found, Playing, gameStatus, waldoType } from './util/util_types';
 
 function Game({ waldos, player, roomNumber }: { waldos: waldoType[], player: string, roomNumber: string }) {
     const [gameStatus, setGameStatus] = useState<gameStatus>(Playing);
     const [level, setLevel] = useState(0);
     const [leaderboard, setLeaderboard] = useState<leaderboardEntry[]>([]);
     const [guesses, setGuesses] = useState<{ x: number, y: number }[]>([]);
-    const [room, setRoom] = useState<roomType>();
+    const [mousePos, setMousePos] = useState<{ x: number, y: number }>({ x: 0, y: 0 });
 
     useEffect(() => {
         const onConnect = () => {
@@ -43,12 +41,6 @@ function Game({ waldos, player, roomNumber }: { waldos: waldoType[], player: str
         socket.on('disconnect', onDisconnect);
         socket.on('scoreBoardChange', onScoreBoardChange);
 
-        get(ref(db, `rooms/${roomNumber}`)).then((snapshot) => {
-            setRoom(snapshot.val());
-        }).catch((error) => {
-            console.error(error);
-        })
-
         return () => {
             socket.disconnect();
             socket.off('connect', onConnect);
@@ -68,6 +60,10 @@ function Game({ waldos, player, roomNumber }: { waldos: waldoType[], player: str
     }, [gameStatus, level, waldos.length]);
 
     useEffect(() => {
+        socket.emit('mousePos', roomNumber, mousePos)
+    }, [mousePos])
+
+    useEffect(() => {
         if (gameStatus === Found || gameStatus === Not_Found) {
             console.log("[+] Sent: /gameStatusChange/")
             socket.emit('gameStatusChange', { status: gameStatus, player: player, roomNumber: roomNumber })
@@ -78,7 +74,7 @@ function Game({ waldos, player, roomNumber }: { waldos: waldoType[], player: str
         <div>
             <p className='font-mono'>Where is waldo?</p>
             <div className='flex'>
-                <WaldoImage waldo={waldos[level]} gameStatus={gameStatus} setGameStatus={setGameStatus} guesses={guesses} setGuesses={setGuesses} />
+                <WaldoImage waldo={waldos[level]} gameStatus={gameStatus} setGameStatus={setGameStatus} guesses={guesses} setGuesses={setGuesses} setMousePos={setMousePos} />
                 <div className='flex-col w-2/12'>
                     <Timer gameStatus={gameStatus} setGameStatus={setGameStatus} levelTime={waldos[level].time} />
                     {gameStatus === Not_Found && <div className='bg-red-500'>You did NOT find Waldo</div>}

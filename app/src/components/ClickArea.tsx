@@ -1,16 +1,26 @@
-import React, { useEffect, useState } from "react";
-import { Found, Playing, gameStatus, guessType, setGuessType, waldoSetterType } from "./util/util_types";
+import { useEffect, useState } from "react";
+import { Found, gameStatus, guessType, setGuessType, setMouseType, waldoSetterType } from "./util/util_types";
 
 type box = {
     top_left: { x: number, y: number }
     bottom_right: { x: number, y: number }
 }
 
-export default function ClickArea({ className, waldo_box, gameStatus, setGameStatus, guesses, setGuesses }: propType) {
-    const mousePosition = useMousePosition();
+export default function ClickArea({ waldo_box, gameStatus, setGameStatus, guesses, setGuesses, setMousePos }: propType) {
     const [frameWidth, setFrameWidth] = useState<number>(0);
     const [frameHeight, setFrameHeight] = useState<number>(0);
-    const [foundWaldo, setFoundWaldo] = useState<boolean>(false);
+
+    useEffect(() => {
+        const updateMousePosition = (e: MouseEvent) => {
+            setMousePos({ x: e.clientX, y: e.clientY });
+        };
+
+        window.addEventListener('mousemove', updateMousePosition);
+
+        return () => {
+            window.removeEventListener('mousemove', updateMousePosition);
+        };
+    });
 
     const handleClick = (e: any) => {
         const rect: DOMRect = e.target.getBoundingClientRect();
@@ -24,7 +34,6 @@ export default function ClickArea({ className, waldo_box, gameStatus, setGameSta
         console.log("FOUND:", found)
 
         if (found) {
-            setFoundWaldo(true);
             setGameStatus(Found);
         } else {
             setGuesses([...guesses, { x: x_ratio, y: y_ratio }]);
@@ -32,7 +41,7 @@ export default function ClickArea({ className, waldo_box, gameStatus, setGameSta
     }
 
     return (
-        <div className={`${className} cursor-crosshair`} onClick={handleClick}>
+        <div className="absolute top-0 left-0 w-full h-full cursor-crosshair" onClick={handleClick}>
             {guesses.map((guess: { x: number, y: number }, i: number) => {
                 return (
                     <img style={{ left: guess.x * frameWidth - 0.5 * frameWidth / 40, top: guess.y * frameHeight - 0.5 * frameHeight / 40, position: 'absolute' }} className="w-1/40 h-1/40" key={i} src="cross.svg" alt="cross"></img>
@@ -51,22 +60,4 @@ export default function ClickArea({ className, waldo_box, gameStatus, setGameSta
     )
 }
 
-const useMousePosition = () => {
-    const [mousePosition, setMousePosition] = useState<{ x: number, y: number }>({ x: 0, y: 0 });
-
-    useEffect(() => {
-        const updateMousePosition = (e: MouseEvent) => {
-            setMousePosition({ x: e.clientX, y: e.clientY });
-        };
-
-        window.addEventListener('mousemove', updateMousePosition);
-
-        return () => {
-            window.removeEventListener('mousemove', updateMousePosition);
-        };
-    }, []);
-
-    return mousePosition;
-};
-
-type propType = { className: string, waldo_box: box, gameStatus: gameStatus, setGameStatus: waldoSetterType, guesses: guessType, setGuesses: setGuessType }
+type propType = { waldo_box: box, gameStatus: gameStatus, setGameStatus: waldoSetterType, guesses: guessType, setGuesses: setGuessType, setMousePos: setMouseType }

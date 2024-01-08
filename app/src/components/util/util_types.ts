@@ -10,12 +10,15 @@ export type box = {
 export type waldoType = {
     image_name: string,
     waldo_box: box,
+    dimensions: {x: number, y:number},
     time: number,
 }
 
 export type guessType = {x: number, y:number}[];
 
 export type setGuessType = Dispatch<SetStateAction<guessType>>;
+
+export type setMouseType = Dispatch<SetStateAction<{x: number, y:number}>>;
 
 export type playerType = {
     name: string,
